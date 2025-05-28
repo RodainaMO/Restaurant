@@ -34,9 +34,9 @@ def main():
     with open("evaluation_report.md", "w") as f:
         f.write("# Evaluation Report\n\n")
         f.write(f"- Hit-rate: **{hit_rate:.2%}**\n")
-        f.write(f"- A/B delta in satisfaction: **{ab['delta']:.2f}** points\n")
+        f.write(f"- A/B delta in satisfaction: **{float(ab['delta']):.2f}** points\n")
         f.write("\n## Raw metrics\n")
-        f.write(f"- Satisfaction scores: {ev.metrics['satisfaction_scores']}\n")
+        f.write(f"- Satisfaction scores: {list(map(float, ev.metrics['satisfaction_scores']))}\n")
         f.write(f"- Usability feedback: {ev.metrics['usability_feedback']}\n")
 
     print("Wrote evaluation_report.md")

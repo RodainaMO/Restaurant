@@ -38,7 +38,7 @@ class ZomatoRecommender:
                 r'\b(' + pattern + r')\b',
                 case=False,
                 na=False,
-                regex=True
+                regex=False
             )]
 
         # Budget filter

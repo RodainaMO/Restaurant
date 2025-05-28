@@ -15,7 +15,7 @@ st.set_page_config(
 @st.cache_data
 def load_data():
     try:
-        df = pd.read_csv('C:/Users/rodyd/PycharmProjects/bonus/data/cleaned_zomato.csv')
+        df = pd.read_csv('data/cleaned_zomato.csv')
 
         # Standardize column names
         df.columns = df.columns.str.strip().str.title()

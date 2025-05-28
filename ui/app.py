@@ -15,7 +15,7 @@ st.set_page_config(
 @st.cache_data
 def load_data():
     try:
-        df = pd.read_csv('C:/Users/rodyd/PycharmProjects/bonus/data/cleaned_zomato.csv')
+        df = pd.read_csv('data/cleaned_zomato.csv')
 
         # Standardize column names
         df.columns = df.columns.str.strip().str.title()
@@ -82,6 +82,7 @@ def display_restaurant_card(restaurant):
             st.markdown(f"**Score:** {restaurant['Score']:.2f}")
         
         st.markdown("---")
+        
 # --- Main App ---
 def main():
     st.title("🍽️ Zomato Restaurant Recommender")

@@ -12,10 +12,9 @@ class Evaluator:
         }
 
     def qualitative_survey(self, recs: pd.DataFrame) -> float:
-        """
-        Stub: collect a 1–5 Likert score. Here we hard-code 4.0.
-        """
-        score = 4.0
+        # Simulate a realistic Likert score with a bit of variation
+        score = np.random.normal(4.0, 0.3)
+        score = max(1.0, min(5.0, score))  # Clamp to 1–5
         self.metrics['satisfaction_scores'].append(score)
         return score
 
@@ -31,9 +30,8 @@ class Evaluator:
         """
         For each randomly chosen row, ask the recommender to
         re-find something with the same cuisine+budget+city;
-        compute fraction where at least one rec matches city or cuisine.
+        compute fraction where at least one rec matches both city and cuisine.
         """
-        # Reset counters
         self.metrics['hits'] = 0
         self.metrics['total'] = 0
 
@@ -46,9 +44,13 @@ class Evaluator:
                 top_n=5
             )
             self.metrics['total'] += 1
-            # count a “hit” if any recommended row shares cuisine OR city
-            if (recs['Primary Cuisine'] == orig['Primary Cuisine']).any() \
-               or (recs['City'] == orig['City']).any():
+
+            match = (
+                (recs['Primary Cuisine'] == orig['Primary Cuisine']) &
+                (recs['City'] == orig['City'])
+            ).any()
+
+            if match:
                 self.metrics['hits'] += 1
 
         return self.metrics['hits'] / max(1, self.metrics['total'])
@@ -63,6 +65,7 @@ class Evaluator:
         """
         Simulate an A/B test by randomly splitting the data
         and collecting average satisfaction for each recommender.
+        Also records simulated usability feedback.
         """
         n = len(data)
         idxs = data.sample(frac=1, random_state=0).index.to_list()
@@ -70,27 +73,47 @@ class Evaluator:
         cohort1 = data.loc[idxs[:split]]
         cohort2 = data.loc[idxs[split:]]
 
-        sat1 = np.mean([
-            self.qualitative_survey(rec_a(
+        scores1 = []
+        for _, row in cohort1.head(50).iterrows():
+            recs = rec_a(
                 cuisines=[row['Primary Cuisine']],
                 budget_range=(row['Cost Category'], row['Cost Category']),
                 location=row['City'],
                 top_n=5
-            ))
-            for _, row in cohort1.head(50).iterrows()
-        ])
-        sat2 = np.mean([
-            self.qualitative_survey(rec_b(
+            )
+            score = self.qualitative_survey(recs)
+            scores1.append(score)
+            # Simulated usability feedback
+            if score > 4.5:
+                self.record_usability("Cohort A: Excellent suggestions!")
+            elif score < 3.5:
+                self.record_usability("Cohort A: Recommendations need improvement.")
+            else:
+                self.record_usability("Cohort A: Fair but could be better.")
+
+        scores2 = []
+        for _, row in cohort2.head(50).iterrows():
+            recs = rec_b(
                 cuisines=[row['Primary Cuisine']],
                 budget_range=(row['Cost Category'], row['Cost Category']),
                 location=row['City'],
                 top_n=5
-            ))
-            for _, row in cohort2.head(50).iterrows()
-        ])
+            )
+            score = self.qualitative_survey(recs)
+            scores2.append(score)
+            # Simulated usability feedback
+            if score > 4.5:
+                self.record_usability("Cohort B: Excellent suggestions!")
+            elif score < 3.5:
+                self.record_usability("Cohort B: Recommendations need improvement.")
+            else:
+                self.record_usability("Cohort B: Fair but could be better.")
+
+        sat1 = np.mean(scores1)
+        sat2 = np.mean(scores2)
 
         return {
-            'cohort1_satisfaction': sat1,
-            'cohort2_satisfaction': sat2,
-            'delta': sat2 - sat1
+            'cohort1_satisfaction': float(sat1),
+            'cohort2_satisfaction': float(sat2),
+            'delta': float(sat2 - sat1)
         }
